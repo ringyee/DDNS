@@ -7,6 +7,14 @@
 ## Install
 
 ```bash
+yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gcc make libffi-devel
+wget https://python.org/ftp/python/3.7.3/Python-3.7.3.tgz
+tar xvf Python-3.7.3.tgz
+cd Python-3.7.3
+./configure prefix=/usr/local/python3
+make && make install
+ln -s /usr/local/python3/bin/python3 /usr/bin/python3
+ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
 pip3 install aliyun-python-sdk-core
 ```
 
