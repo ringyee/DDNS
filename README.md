@@ -4,7 +4,7 @@
 
 > 利用Python和阿里云云解析API实现。可利用于家庭环境，向公网映射NAS，DB，Web等应用
 
-## Install
+## Install in CentOS
 
 ```bash
 yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gcc make libffi-devel
