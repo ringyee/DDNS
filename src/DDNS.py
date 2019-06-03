@@ -15,26 +15,48 @@ import time
 import argparse
 
 def DDNS(use_v6):
+    domain = Utils.getConfigJson().get('First-level-domain')
+    subDomain = Utils.getConfigJson().get('Second-level-domain')
     client = Utils.getAcsClient()
-    recordId = Utils.getRecordId(Utils.getConfigJson().get('Second-level-domain'))
+    recordId = Utils.getRecordId(subDomain)
     if use_v6:
         ip = Utils.getRealIPv6()
         type = 'AAAA'
     else:
         ip = Utils.getRealIP()
         type = 'A'
-    print({'type': type, 'ip':ip})
+    print({'type': type, 'ip':ip, 'domain':subDomain+'.'+domain})
 
-    request = Utils.getCommonRequest()
-    request.set_domain('alidns.aliyuncs.com')
-    request.set_version('2015-01-09')
-    request.set_action_name('UpdateDomainRecord')
-    request.add_query_param('RecordId', recordId)
-    request.add_query_param('RR', Utils.getConfigJson().get('Second-level-domain'))
-    request.add_query_param('Type', type)
-    request.add_query_param('Value', ip)
-    response = client.do_action_with_exception(request)
-    return response
+    needToUpdate = True
+    try:
+        f = open('.ip', 'r+')
+        line = f.readline()
+        line = line.strip()
+        if line == ip:
+            needToUpdate = False
+            print('No need to update!')
+        f.close();
+    except FileNotFoundError:
+        pass
+
+    if needToUpdate:
+        request = Utils.getCommonRequest()
+        request.set_domain('alidns.aliyuncs.com')
+        request.set_version('2015-01-09')
+        request.set_action_name('UpdateDomainRecord')
+        request.add_query_param('RecordId', recordId)
+        request.add_query_param('RR', subDomain)
+        request.add_query_param('Type', type)
+        request.add_query_param('Value', ip)
+        response = client.do_action_with_exception(request)
+
+        f = open('.ip', 'w')
+        f.write(ip)
+        f.close();
+
+        return response
+
+    return ""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DDNS')
@@ -51,5 +73,12 @@ if __name__ == "__main__":
     except (ServerException,ClientException) as reason:
         print("失败！原因为")
         print(reason.get_error_msg())
-        print("可参考:https://help.aliyun.com/document_detail/29774.html?spm=a2c4g.11186623.2.20.fDjexq#%E9%94%99%E8%AF%AF%E7%A0%81")
-        print("或阿里云帮助文档")
+        if 'already exists' in reason.get_error_msg():
+            if isipv6:
+                ip = Utils.getRealIPv6()
+            else:
+                ip = Utils.getRealIP()
+                
+            f = open('.ip', 'w')
+            f.write(ip)
+            f.close();
